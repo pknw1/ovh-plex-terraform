@@ -1,12 +1,39 @@
 data "template_file" "docker_compose" {
   template = <<EOF
 version: '3'
+
+volumes:
+  config-${var.service}:
+
 services:
+  ${var.service}-config:
+    image: pknw1/config:latest
+    pull_policy: always
+    container_name: config-${var.service}
+    hostname: config-${var.service}
+    restart: always 
+    networks:
+      - proxy
+    volumes:
+      - /etc/ssl:/etc/ssl:ro
+      - /root/.ssh:/root/.ssh:ro
+      - /etc/localtime:/etc/localtime:ro
+      - config-${var.service}:${var.data_dir}
+    environment:
+      - TZ="Europe/London"
+      - PUID=666
+      - PGID=666
+      - REPO=config-${var.service}
+
   ${var.service}:
     image: ${var.image_name}
     container_name: ${var.service}
     restart: always
     hostname: ${var.service}
+    depends_on:
+      - ${var.service}-config
+    dns:
+      - "8.8.8.8"
     networks:
       - proxy
     volumes:
@@ -14,8 +41,11 @@ services:
       - /etc/ssl:/etc/ssl:ro
       - /etc/localtime:/etc/localtime:ro
       - /tmp:/tmp
-      - ./config/${var.service}:${var.data_dir}
+      - config-${var.service}:${var.data_dir}
       - /shared:/shared
+      - /download:/download
+      - /content:/content
+      - /:/host:ro
     environment:
       - TZ="Europe/London"
       - VIRTUAL_HOST=${var.service}.pknw1.co.uk
