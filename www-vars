@@ -1,0 +1,13 @@
+variable "site" {
+  description = "map of container values"
+  type        = map
+  default     = {
+    site = {
+	repo = "www.pknw1.co.uk"
+    },
+    git = {
+        repo = "pknw1.gitlab.io"
+   },
+   terminal = { repo = "terminal.pknw1.co.uk" }
+  }
+}
